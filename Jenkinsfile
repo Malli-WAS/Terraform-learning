@@ -2,7 +2,7 @@
 // Works on Windows and Linux Jenkins agents (uses bat or sh automatically).
 // State is stored remotely in S3 (see backend.tf in each module), so cleanWs() is safe.
 
-def run(String cmd) {
+def runCmd(String cmd) {
   if (isUnix()) { sh cmd } else { bat cmd }
 }
 
@@ -40,9 +40,11 @@ pipeline {
         withCredentials([usernamePassword(credentialsId: 'aws-creds',
             usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
           dir(params.MODULE) {
-            run 'terraform fmt -check -recursive'
-            run 'terraform init -no-color'
-            run 'terraform validate -no-color'
+            script {
+              runCmd 'terraform fmt -check -recursive'
+              runCmd 'terraform init -no-color'
+              runCmd 'terraform validate -no-color'
+            }
           }
         }
       }
@@ -55,8 +57,8 @@ pipeline {
           dir(params.MODULE) {
             script {
               def destroyFlag = (params.ACTION == 'destroy') ? '-destroy' : ''
-              run "terraform plan -no-color ${destroyFlag} -out=tfplan"
-              run 'terraform show -no-color tfplan > plan.txt'
+              runCmd "terraform plan -no-color ${destroyFlag} -out=tfplan"
+              runCmd 'terraform show -no-color tfplan > plan.txt'
             }
           }
         }
@@ -80,7 +82,9 @@ pipeline {
             usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
           dir(params.MODULE) {
             // Applies exactly the plan that was reviewed
-            run 'terraform apply -no-color tfplan'
+            script {
+              runCmd 'terraform apply -no-color tfplan'
+            }
           }
         }
       }
