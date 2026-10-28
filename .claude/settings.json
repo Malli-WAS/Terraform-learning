@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(terraform fmt:*)",
+      "Bash(terraform validate:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "mcp__jenkins__list_jobs",
+      "mcp__jenkins__get_queue_item",
+      "mcp__jenkins__get_build_status",
+      "mcp__jenkins__wait_for_build",
+      "mcp__jenkins__get_console_log",
+      "mcp__jenkins__get_plan_output"
+    ],
+    "ask": [
+      "Bash(git push:*)",
+      "Bash(git commit:*)",
+      "mcp__jenkins__trigger_terraform",
+      "mcp__jenkins__abort_build"
+    ],
+    "deny": [
+      "Bash(terraform apply:*)",
+      "Bash(terraform destroy:*)",
+      "Read(./**/*.tfstate)",
+      "Read(./**/*.tfvars)"
+    ]
+  }
+}

@@ -42,3 +42,15 @@ terraform.rc
 # Optional: ignore plan files saved before destroying Terraform configuration
 # Uncomment the line below if you want to ignore planout files.
 # planout
+# Jenkins pipeline outputs
+tfplan
+plan.txt
+
+# Local kit archive
+claude-jenkins-terraform.zip
+
+# Python
+__pycache__/
+
+# Local MCP config (contains Jenkins API token)
+.mcp.json
