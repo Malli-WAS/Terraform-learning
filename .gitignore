@@ -1,8 +1,8 @@
 # Local .terraform directories
 .terraform/
 
-# .tfstate files
-*.tfstate
+# .tfstate files — <module>/terraform.tfstate IS committed (state is kept in Git, see backend.tf);
+# backups and lock files are not
 *.tfstate.*
 
 # Crash log files

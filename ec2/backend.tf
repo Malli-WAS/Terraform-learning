@@ -1,11 +1,9 @@
-# Remote state so Jenkins builds share state (the workspace is wiped after every build).
-# The bucket must exist before "terraform init" — see JENKINS-CLAUDE-SETUP.md.
+# State is kept in this Git repo (<module>/terraform.tfstate). Jenkins commits and pushes it
+# after every apply/destroy, so always `git pull` before running Terraform locally.
+# WARNING: the repo is public and state is plain text — never create secrets (access keys,
+# login profiles, passwords) in these modules while state lives here.
 terraform {
-  backend "s3" {
-    bucket       = "malli-terraform-learning-tfstate"
-    key          = "ec2/terraform.tfstate"
-    region       = "us-east-1"
-    encrypt      = true
-    use_lockfile = true # native S3 locking (Terraform >= 1.10), no DynamoDB table needed
+  backend "local" {
+    path = "terraform.tfstate"
   }
 }

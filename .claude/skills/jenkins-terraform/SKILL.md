@@ -7,7 +7,8 @@ description: Run Terraform plan/apply/destroy for the ec2, iam or s3 modules thr
 
 Uses the `jenkins` MCP server (tools `mcp__jenkins__*`, defined in `jenkins-mcp/server.py`).
 Job: `terraform-pipeline`, parameters `MODULE` (ec2|iam|s3), `ACTION` (plan|apply|destroy), `BRANCH` (default main).
-State: S3 bucket `malli-terraform-learning-tfstate`, key `<module>/terraform.tfstate`, region us-east-1.
+State: committed to the Git repo as `<module>/terraform.tfstate` (local backend); the pipeline pushes it
+after every apply/destroy using the `github-push-token` Jenkins credential.
 
 | Tool | Use |
 |---|---|
@@ -61,7 +62,8 @@ If the timeout hits while paused, say so; do not abort.
 | Symptom | Cause / fix |
 |---|---|
 | `terraform fmt -check` fails | Run `terraform fmt -recursive`, commit, push, re-plan |
-| `S3 bucket does not exist` / `NoSuchBucket` at init | Create the state bucket (JENKINS-CLAUDE-SETUP.md §1) |
+| `Could not find credentials entry with ID 'github-push-token'` / push 403 | Add the GitHub push credential (JENKINS-CLAUDE-SETUP.md §3). State is in the build's archived artifacts — get it committed before any other apply |
+| Push rejected / rebase conflict on `terraform.tfstate` | Someone else changed state; stop and ask the user — never overwrite state |
 | `Could not find credentials entry` / `No valid credential sources` / `InvalidClientTokenId` | `aws-terraform-creds` credential missing or wrong in Jenkins |
 | `EntityAlreadyExists` (IAM) / `BucketAlreadyOwnedByYou` | Resource exists outside state: `terraform import`, never recreate |
 | State lock error | Another build is running; check `get_build_status`. Never force-unlock without asking |

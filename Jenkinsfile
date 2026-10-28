@@ -1,6 +1,8 @@
 // Parameterized Terraform pipeline for Terraform-learning (modules: ec2, iam, s3)
 // Works on Windows and Linux Jenkins agents (uses bat or sh automatically).
-// State is stored remotely in S3 (see backend.tf in each module), so cleanWs() is safe.
+// State is kept in Git (<module>/terraform.tfstate, see backend.tf). After every apply/destroy the
+// pipeline commits and pushes it back to GitHub using the 'github-push-token' credential
+// (Username with password: GitHub user + token with contents:write), so cleanWs() is safe.
 
 def runCmd(String cmd) {
   if (isUnix()) { sh cmd } else { bat cmd }
@@ -84,6 +86,20 @@ pipeline {
             // Applies exactly the plan that was reviewed
             script {
               runCmd 'terraform apply -no-color tfplan'
+            }
+          }
+        }
+      }
+      post {
+        // Runs even if apply fails part-way: Terraform still writes partial state, which must be kept
+        always {
+          archiveArtifacts artifacts: "${params.MODULE}/terraform.tfstate", allowEmptyArchive: true
+          withCredentials([gitUsernamePassword(credentialsId: 'github-push-token')]) {
+            script {
+              runCmd "git add ${params.MODULE}/terraform.tfstate"
+              runCmd "git diff --cached --quiet || git -c user.name=jenkins -c user.email=jenkins@localhost commit -m \"Update ${params.MODULE} state (${params.ACTION}, build #${env.BUILD_NUMBER})\""
+              runCmd "git pull --rebase --autostash origin ${params.BRANCH}"
+              runCmd "git push origin HEAD:${params.BRANCH}"
             }
           }
         }

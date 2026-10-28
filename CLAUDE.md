@@ -2,12 +2,15 @@
 
 Three independent root modules: `ec2/`, `iam/`, `s3/`. Each has providers.tf, versions.tf, backend.tf,
 variables.tf, main.tf, outputs.tf. Run Terraform per module directory, never from repo root.
-State is remote in S3 (`malli-terraform-learning-tfstate`, key `<module>/terraform.tfstate`, us-east-1).
+State is committed to this (public) Git repo as `<module>/terraform.tfstate` (local backend). Jenkins
+commits and pushes it after every apply/destroy. `git pull` before running Terraform locally.
 
 ## Rules
 - Never run `terraform apply` or `destroy` locally. All applies go through Jenkins (`terraform-pipeline` job).
 - Always run `terraform fmt` and `terraform validate` in the module before committing.
-- Never read or print `*.tfstate` / `*.tfvars` or any AWS credentials.
+- Never read or print `*.tfstate` / `*.tfvars` or any AWS credentials. Never hand-edit or hand-commit
+  `terraform.tfstate`; only the pipeline updates it.
+- State is public: never add resources that store secrets in state (access keys, login profiles, passwords).
 - For apply/destroy: show the plan first, then ask the user for explicit approval in chat.
 
 ## Jenkins tasks

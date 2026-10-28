@@ -1,23 +1,16 @@
 # Claude Code ↔ Jenkins ↔ Terraform setup (Windows)
 
 Flow: you chat with Claude Code → `jenkins` MCP server (`jenkins-mcp/server.py`) → Jenkins REST API
-(http://localhost:8080) → `Jenkinsfile` → Terraform → AWS (state in S3).
+(http://localhost:8080) → `Jenkinsfile` → Terraform → AWS (state committed to this Git repo).
 
-## 1. One-time AWS: create the state bucket
-State lives in S3 (`<module>/backend.tf`) because Jenkins wipes its workspace after every build.
-```powershell
-aws s3api create-bucket --bucket malli-terraform-learning-tfstate --region us-east-1
-aws s3api put-bucket-versioning --bucket malli-terraform-learning-tfstate --versioning-configuration Status=Enabled
-aws s3api put-public-access-block --bucket malli-terraform-learning-tfstate --public-access-block-configuration BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true
-```
-If that name is taken (bucket names are global), pick another and update all three `backend.tf` files.
-Requires Terraform >= 1.10 (native S3 locking, no DynamoDB table).
-
-Then, in each module (`ec2`, `iam`, `s3`), move the old local state to S3 once:
-```powershell
-cd ec2; terraform init -migrate-state; cd ..
-```
-Old local `terraform.tfstate*` files can be deleted after migration.
+## 1. Terraform state lives in Git
+Each module uses a local backend (`<module>/backend.tf`) and its `<module>/terraform.tfstate` is
+committed to this repo. Jenkins wipes its workspace after every build, so the pipeline commits and
+pushes the state back to GitHub after every apply/destroy (it also archives it as a build artifact).
+- The repo is **public** and state is plain text: never create secrets (access keys, login profiles,
+  passwords) in these modules.
+- No locking: don't run Terraform locally while a Jenkins build is running, and always `git pull`
+  before running Terraform locally.
 
 ## 2. Format the code (otherwise the pipeline's fmt check fails)
 ```powershell
@@ -30,7 +23,8 @@ terraform fmt -recursive
    The Jenkinsfile picks `bat` on Windows and `sh` on Linux automatically.
 3. Manage Jenkins → Credentials → add "AWS Credentials" (CloudBees AWS Credentials plugin),
    ID `aws-terraform-creds` (access key ID + secret access key). Use a least-privilege IAM user.
-   Add `github-token` only if the repo is private.
+   Add "Username with password", ID `github-push-token` (username = GitHub user, password = a
+   GitHub token with `contents: write` on this repo) so the pipeline can push state.
 4. New Item → Pipeline `terraform-pipeline` → "Pipeline script from SCM" → Git
    `https://github.com/Malli-WAS/Terraform-learning.git`, branch `main`, script path `Jenkinsfile`.
 5. Run it once with "Build Now" so Jenkins registers the parameters (MODULE, ACTION, BRANCH).
