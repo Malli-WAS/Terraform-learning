@@ -94,6 +94,8 @@ pipeline {
         // Runs even if apply fails part-way: Terraform still writes partial state, which must be kept
         always {
           archiveArtifacts artifacts: "${params.MODULE}/terraform.tfstate", allowEmptyArchive: true
+          // The Git plugin calls git.exe by full path, but bat steps need it on PATH (prepended; no-op on Linux)
+          withEnv(['PATH+GIT=C:\\Program Files\\Git\\cmd']) {
           withCredentials([gitUsernamePassword(credentialsId: 'github-push-token')]) {
             script {
               runCmd "git add ${params.MODULE}/terraform.tfstate"
@@ -101,6 +103,7 @@ pipeline {
               runCmd "git pull --rebase --autostash origin ${params.BRANCH}"
               runCmd "git push origin HEAD:${params.BRANCH}"
             }
+          }
           }
         }
       }
