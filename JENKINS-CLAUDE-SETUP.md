@@ -28,8 +28,8 @@ terraform fmt -recursive
 1. Plugins: Git, Pipeline, Credentials Binding, Timestamper, Workspace Cleanup.
 2. Terraform (>= 1.10) and Git installed on the Jenkins machine and on its PATH.
    The Jenkinsfile picks `bat` on Windows and `sh` on Linux automatically.
-3. Manage Jenkins → Credentials → add "Username with password", ID `aws-creds`
-   (username = AWS access key ID, password = secret key). Use a least-privilege IAM user.
+3. Manage Jenkins → Credentials → add "AWS Credentials" (CloudBees AWS Credentials plugin),
+   ID `aws-terraform-creds` (access key ID + secret access key). Use a least-privilege IAM user.
    Add `github-token` only if the repo is private.
 4. New Item → Pipeline `terraform-pipeline` → "Pipeline script from SCM" → Git
    `https://github.com/Malli-WAS/Terraform-learning.git`, branch `main`, script path `Jenkinsfile`.

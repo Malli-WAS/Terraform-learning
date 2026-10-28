@@ -37,8 +37,8 @@ pipeline {
 
     stage('Init & Validate') {
       steps {
-        withCredentials([usernamePassword(credentialsId: 'aws-creds',
-            usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-terraform-creds',
+            accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
           dir(params.MODULE) {
             script {
               runCmd 'terraform fmt -check -recursive'
@@ -52,8 +52,8 @@ pipeline {
 
     stage('Plan') {
       steps {
-        withCredentials([usernamePassword(credentialsId: 'aws-creds',
-            usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-terraform-creds',
+            accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
           dir(params.MODULE) {
             script {
               def destroyFlag = (params.ACTION == 'destroy') ? '-destroy' : ''
@@ -78,8 +78,8 @@ pipeline {
     stage('Apply / Destroy') {
       when { expression { params.ACTION in ['apply', 'destroy'] } }
       steps {
-        withCredentials([usernamePassword(credentialsId: 'aws-creds',
-            usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-terraform-creds',
+            accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
           dir(params.MODULE) {
             // Applies exactly the plan that was reviewed
             script {

@@ -62,7 +62,7 @@ If the timeout hits while paused, say so; do not abort.
 |---|---|
 | `terraform fmt -check` fails | Run `terraform fmt -recursive`, commit, push, re-plan |
 | `S3 bucket does not exist` / `NoSuchBucket` at init | Create the state bucket (JENKINS-CLAUDE-SETUP.md §1) |
-| `No valid credential sources` / `InvalidClientTokenId` | `aws-creds` credential missing or wrong in Jenkins |
+| `Could not find credentials entry` / `No valid credential sources` / `InvalidClientTokenId` | `aws-terraform-creds` credential missing or wrong in Jenkins |
 | `EntityAlreadyExists` (IAM) / `BucketAlreadyOwnedByYou` | Resource exists outside state: `terraform import`, never recreate |
 | State lock error | Another build is running; check `get_build_status`. Never force-unlock without asking |
 | `DeleteConflict` on IAM destroy | Policies still attached; plan should detach first — check ordering |
